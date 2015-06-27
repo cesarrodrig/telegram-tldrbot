@@ -1,8 +1,8 @@
 import json
 import time
-import datetime
-import logging
+from datetime import datetime
 
+import logger
 from config import *
 from requester import GetUpdatesRequest
 from requester import SendMessageRequest
@@ -48,7 +48,7 @@ class TlDrBot:
 
         self.tags = tags
         self.last_update_id = int(update_id)
-        self.logger = logging.getLogger(__name__)
+        self.logger = logger.get_logger(__name__)
 
     def start(self):
         while True:
@@ -109,8 +109,11 @@ class TlDrBot:
         Takes a message that mentions TlDrBot and stores it as a tag
         """
         chat_id = str(message["chat"]["id"])
-        tag = self.get_tag_from_message(message, self.get_tag_text_from_mention)
-        self.add_tag(chat_id, tag)
+        try:
+            tag = self.get_tag_from_message(message, self.get_tag_text_from_mention)
+            self.add_tag(chat_id, tag)
+        except UserTagLimitException as e:
+            self.logger.warn(e.message)
 
     def process_chat_id_query(self, chat_id):
         text = "This chat's ID: {}\nUse it to call '/tldr {}'".format(chat_id, chat_id)
@@ -169,6 +172,16 @@ class TlDrBot:
         f.close()
 
     def get_tag_from_message(self, message, tag_func):
+        date = datetime.fromtimestamp(message["date"])
+        chat_id = str(message["chat"]["id"])
+        user_id = message["from"]["id"]
+
+        for tag in self.tags[chat_id]:
+            d = datetime.fromtimestamp(tag["date"])
+
+            if tag["from"]["id"] == user_id and (date - d).days == 0 and (date - d).seconds <= 5 * 60:
+                raise UserTagLimitException("User '%s' is submitting too rapidly" % message["from"]["username"])
+
         tag = {
             "from" : message["from"],
             "date" : message["date"],
@@ -182,6 +195,9 @@ class TlDrBot:
     def tag_to_text(self, tag):
         # date = datetime.datetime.fromtimestamp(tag["date"]).strftime('%Y-%m-%d %H:%M:%S')
         return '"{}" @{}'.format(tag["text"], tag["from"]["username"])
+
+class UserTagLimitException(Exception):
+    pass
 
 bot = TlDrBot()
 bot.start()
