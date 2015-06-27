@@ -69,7 +69,7 @@ class TlDrBot:
         self.save_last_update_id(last_update_id)
 
     def get_messages(self, json):
-        return [m["message"] for m in json["result"]]
+        return [m["message"] for m in json["result"] if "message" in m]
 
     def get_last_update_id(self, json):
         return json["result"][-1]["update_id"] if json["result"] else None
