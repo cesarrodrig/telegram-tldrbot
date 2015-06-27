@@ -2,7 +2,14 @@ import logging
 
 from config import LOGGING_LEVEL
 
+loggers = {}
+
 def get_logger(name):
+    global loggers
+
+    if name in loggers:
+        return loggers[name]
+
     logger = logging.getLogger(name)
     logger.setLevel(LOGGING_LEVEL)
 
@@ -13,4 +20,6 @@ def get_logger(name):
     ch.setFormatter(formatter)
 
     logger.addHandler(ch)
+    loggers[name] = logger
+
     return logger
