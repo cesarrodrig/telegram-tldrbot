@@ -1,7 +1,7 @@
 import requests
 import json
-import logging
 
+import logger
 from config import *
 
 # Credits to @ixai for this Requester model
@@ -15,7 +15,7 @@ class Requester(object):
         self.__url = "{}{}".format(url, request_path)
         self.__query_params = query_params
         self.__request_body = request_body
-        self.logger = logging.getLogger(__name__)
+        self.logger = logger.get_logger(__name__)
 
     def __query(self):
         r = reduce(lambda x,y: "{}{}={}&".format(x,y,self.__query_params[y]), self.__query_params, "")
