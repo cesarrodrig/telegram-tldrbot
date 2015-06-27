@@ -1,0 +1,89 @@
+import requests
+import json
+import logging
+
+from config import *
+
+# Credits to @ixai for this Requester model
+
+class Encoder(json.JSONEncoder):
+    def default(self, o):
+        return {k:o.__dict__[k] for k in o.__dict__ if o.__dict__[k] != None}
+
+class Requester(object):
+    def __init__(self, url, request_path, query_params, request_body=None):
+        self.__url = "{}{}".format(url, request_path)
+        self.__query_params = query_params
+        self.__request_body = request_body
+        self.logger = logging.getLogger(__name__)
+
+    def __query(self):
+        r = reduce(lambda x,y: "{}{}={}&".format(x,y,self.__query_params[y]), self.__query_params, "")
+        return r
+
+    def _post(self):
+        data = json.dumps(self.__request_body, cls=Encoder)
+        self.logger.info("POST {}?{}\n{}".format(self.__url, self.__query(), data))
+        r = requests.post(self.__url, params=self.__query_params, data=data)
+        b = r.text
+        if b == "":
+            b = "{}"
+        self.logger.info("Response: {}".format(b))
+        return (r, json.loads(b))
+
+    def _get(self):
+        self.logger.info("GET {}?{}".format(self.__url, self.__query()))
+        r = requests.get(self.__url, params=self.__query_params)
+        b = r.text
+        if b == "":
+            b = "{}"
+        self.logger.info("Response: {}".format(b))
+        return (r, json.loads(b))
+
+    def _delete(self):
+        self.logger.info("DELETE {}?{}".format(self.__url, self.__query()))
+        r = requests.delete(self.__url, params=self.__query_params)
+        b = r.text
+        if b == "":
+            b = "{}"
+        self.logger.info("Response: {}".format(b))
+        return (r, json.loads(b))
+
+class TlDrRequester(Requester):
+
+    def __init__(self, request_path, query_params, request_body=None):
+        super(TlDrRequester, self).__init__(BOT_URL, request_path, query_params, request_body)
+
+class GetUpdatesRequest(TlDrRequester):
+    """
+    GET /getUpdates
+    """
+    def __init__(self, offset=0, limit=100, timeout=0):
+        request_path = '/getUpdates'
+        request_body = {}
+        query_params = {
+            "offset": offset,
+            "limit": limit,
+            "timeout": timeout
+        }
+        super(GetUpdatesRequest, self).__init__(request_path, query_params, request_body)
+
+    def do(self):
+        return self._get()
+
+class SendMessageRequest(TlDrRequester):
+    """
+    GET /sendMessage
+    """
+    def __init__(self, chat_id, text, extra_query_params={}):
+        request_path = '/sendMessage'
+        request_body = {}
+        query_params = {
+            "chat_id": chat_id,
+            "text": text
+        }
+        extra_query_params.update(query_params)
+        super(SendMessageRequest, self).__init__(request_path, extra_query_params, request_body)
+
+    def do(self):
+        return self._get()
