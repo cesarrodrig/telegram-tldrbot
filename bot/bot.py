@@ -78,6 +78,7 @@ class EhBot:
 
         for message in messages:
             chat_id = str(message["chat"]["id"])
+            user_id = str(message["from"]["id"])
             if "text" not in message:
                 continue
 
@@ -85,7 +86,7 @@ class EhBot:
                 self.process_help(chat_id)
 
             elif message["text"].lower().find("/tldr") == 0:
-                self.process_tldr_query(chat_id, message["text"])
+                self.process_tldr_query(chat_id, user_id, message["text"])
 
             elif message["text"].lower().find("/chatid") == 0:
                 self.process_chat_id_query(chat_id)
@@ -125,7 +126,7 @@ class EhBot:
         if response.status_code != 200 or not content["ok"]:
             raise "Failed to send /help"
 
-    def process_tldr_query(self, chat_id, text):
+    def process_tldr_query(self, chat_id, user_id, text):
         query_chat = text.split("/tldr")[-1].strip()
         query_chat_id = None
         if not query_chat:
@@ -134,7 +135,7 @@ class EhBot:
             # query_chat_id = self.get_chat_id_from_chat_name(query_chat)
             query_chat_id = query_chat
 
-        self.send_tags(chat_id, query_chat_id)
+        self.send_tags(user_id, query_chat_id)
 
     def send_tags(self, chat_id, query_chat_id):
         tags = []
@@ -142,7 +143,7 @@ class EhBot:
         if query_chat_id in self.tags:
             tags = self.tags[query_chat_id]
             tags_text = "\n- ".join([self.tag_to_text(t) for t in tags])
-            tags_text = "Tags for chat %s:\n- %s" % (chat_id, tags_text)
+            tags_text = "Tags for chat %s:\n- %s" % (query_chat_id, tags_text)
         else:
             tags_text = "No Tags found for this chat"
 
