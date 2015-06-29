@@ -12,41 +12,41 @@ class Encoder(json.JSONEncoder):
 
 class Requester(object):
     def __init__(self, url, request_path, query_params, request_body=None):
-        self.__url = "{}{}".format(url, request_path)
+        self.__url = "%s%s" % (url, request_path)
         self.__query_params = query_params
         self.__request_body = request_body
         self.logger = logger.get_logger(__name__)
 
     def __query(self):
-        r = reduce(lambda x,y: "{}{}={}&".format(x,y,self.__query_params[y]), self.__query_params, "")
+        r = reduce(lambda x,y: "%s%s=%s&" % (x,y,self.__query_params[y]), self.__query_params, "")
         return r
 
     def _post(self):
         data = json.dumps(self.__request_body, cls=Encoder)
-        self.logger.info("POST {}?{}\n{}".format(self.__url, self.__query(), data))
+        self.logger.info("POST %s?%s\n%s" % (self.__url, self.__query(), data))
         r = requests.post(self.__url, params=self.__query_params, data=data)
         b = r.text
         if b == "":
             b = "{}"
-        self.logger.info("Response: {}".format(b))
+        self.logger.info("Response: %s" % (b))
         return (r, json.loads(b))
 
     def _get(self):
-        self.logger.info("GET {}?{}".format(self.__url, self.__query()))
+        self.logger.info("GET %s?%s" % (self.__url, self.__query()))
         r = requests.get(self.__url, params=self.__query_params)
         b = r.text
         if b == "":
             b = "{}"
-        self.logger.info("Response: {}".format(b))
+        self.logger.info("Response: %s" % (b))
         return (r, json.loads(b))
 
     def _delete(self):
-        self.logger.info("DELETE {}?{}".format(self.__url, self.__query()))
+        self.logger.info("DELETE %s?%s" % (self.__url, self.__query()))
         r = requests.delete(self.__url, params=self.__query_params)
         b = r.text
         if b == "":
             b = "{}"
-        self.logger.info("Response: {}".format(b))
+        self.logger.info("Response: %s" % (b))
         return (r, json.loads(b))
 
 class TlDrRequester(Requester):
