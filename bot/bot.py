@@ -10,11 +10,11 @@ from tag import Tag
 
 
 HELP = """
-TlDrBot saves tags so important topics can be retrieved later by users without having to read all the conversation.
+EhBot saves tags so important topics can be retrieved later by users without having to read all the conversation.
 
-To add a tag, mention the @TlDrBot followed by the tag:
+To add a tag, mention the @EhBot followed by the tag:
 
-@TlDrBot dinner at 8:30pm
+@EhBot dinner at 8:30pm
 
 Or use the /tag command.
 
@@ -25,9 +25,9 @@ Commands:
 /tag <text> - Adds a tag to the current chat.
 
 """
-BOT_TAG = "@tldrbot"
+BOT_TAG = "@ehbot"
 
-class TlDrBot:
+class EhBot:
 
     def __init__(self):
         update_id = "0"
@@ -59,7 +59,7 @@ class TlDrBot:
         request = GetUpdatesRequest(offset = self.last_update_id)
         response, content = request.do()
         if response.status_code != 200 or not content["ok"]:
-            raise "Failed to get updates", response.text
+            raise GetUpdatesException("Failed to get updates")
 
         messages = self.get_messages(content)
         last_update_id = self.get_last_update_id(content)
@@ -109,7 +109,7 @@ class TlDrBot:
 
     def process_tag_mention(self, message):
         """
-        Takes a message that mentions TlDrBot and stores it as a tag
+        Takes a message that mentions EhBot and stores it as a tag
         """
         chat_id = str(message["chat"]["id"])
         try:
@@ -202,5 +202,8 @@ class TlDrBot:
 class UserTagLimitException(Exception):
     pass
 
-bot = TlDrBot()
+class GetUpdatesException(Exception):
+    pass
+
+bot = EhBot()
 bot.start()
