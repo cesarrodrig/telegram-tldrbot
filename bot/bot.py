@@ -105,8 +105,12 @@ class EhBot:
 
     def process_tag_command(self, message):
         chat_id = str(message["chat"]["id"])
-        tag = self.get_tag_from_message(message, lambda text: text.split("/tag")[-1].strip())
-        self.add_tag(chat_id, tag)
+        try:
+            tag = self.get_tag_from_message(message, lambda text: text.split("/tag")[-1].strip())
+            self.add_tag(chat_id, tag)
+        except UserTagLimitException as e:
+            self.send_warning_to_user(message["from"]["id"], "Stop spamming")
+            self.logger.warn(e.message)
 
     def process_tag_mention(self, message):
         """
@@ -117,6 +121,7 @@ class EhBot:
             tag = self.get_tag_from_message(message, self.get_tag_text_from_mention)
             self.add_tag(chat_id, tag)
         except UserTagLimitException as e:
+            self.send_warning_to_user(message["from"]["id"], "Stop spamming")
             self.logger.warn(e.message)
 
     def process_chat_id_query(self, chat_id):
@@ -151,6 +156,12 @@ class EhBot:
         response, content = request.do()
         if response.status_code != 200 or not content["ok"]:
             raise "Failed to send /tldr"
+
+    def send_warning_to_user(self, user_id, warning_text):
+        request = SendMessageRequest(user_id, warning_text)
+        response, content = request.do()
+        if response.status_code != 200 or not content["ok"]:
+            raise "Failed to send warning to user"
 
     def add_tag(self, chat_id, tag):
         if chat_id not in self.tags:
