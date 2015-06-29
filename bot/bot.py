@@ -78,6 +78,9 @@ class TlDrBot:
 
         for message in messages:
             chat_id = str(message["chat"]["id"])
+            if "text" not in message:
+                continue
+
             if message["text"] == "/help":
                 self.process_help(chat_id)
 
