@@ -142,7 +142,7 @@ class TlDrBot:
         if query_chat_id in self.tags:
             tags = self.tags[query_chat_id]
             tags_text = "\n- ".join([self.tag_to_text(t) for t in tags])
-            tags_text = "Tags for chat {}:\n- {}".format(chat_id, tags_text)
+            tags_text = "Tags for chat %s:\n- %s" % (chat_id, tags_text)
         else:
             tags_text = "No Tags found for this chat"
 
@@ -197,7 +197,7 @@ class TlDrBot:
 
     def tag_to_text(self, tag):
         # date = datetime.datetime.fromtimestamp(tag["date"]).strftime('%Y-%m-%d %H:%M:%S')
-        return '"{}" @{}'.format(tag["text"], tag["from"]["username"])
+        return '"%s" @%s' % (tag["text"], tag["from"]["username"])
 
 class UserTagLimitException(Exception):
     pass
