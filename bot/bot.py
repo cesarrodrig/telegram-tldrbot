@@ -179,11 +179,12 @@ class EhBot:
         chat_id = str(message["chat"]["id"])
         user_id = message["from"]["id"]
 
-        for tag in self.tags[chat_id]:
-            d = datetime.fromtimestamp(tag["date"])
+        if chat_id in self.tags:
+            for tag in self.tags[chat_id]:
+                d = datetime.fromtimestamp(tag["date"])
 
-            if tag["from"]["id"] == user_id and (date - d).days == 0 and (date - d).seconds <= 5 * 60:
-                raise UserTagLimitException("User '%s' is submitting too rapidly" % message["from"]["username"])
+                if tag["from"]["id"] == user_id and (date - d).days == 0 and (date - d).seconds <= 5 * 60:
+                    raise UserTagLimitException("User '%s' is submitting too rapidly" % message["from"]["username"])
 
         tag = {
             "from" : message["from"],
