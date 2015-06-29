@@ -184,7 +184,8 @@ class EhBot:
                 d = datetime.fromtimestamp(tag["date"])
 
                 if tag["from"]["id"] == user_id and (date - d).days == 0 and (date - d).seconds <= 5 * 60:
-                    raise UserTagLimitException("User '%s' is submitting too rapidly" % message["from"]["username"])
+                    username = self.get_user_from_source(tag["from"])
+                    raise UserTagLimitException("User '%s' is submitting too rapidly" % username)
 
         tag = {
             "from" : message["from"],
@@ -198,7 +199,12 @@ class EhBot:
 
     def tag_to_text(self, tag):
         # date = datetime.datetime.fromtimestamp(tag["date"]).strftime('%Y-%m-%d %H:%M:%S')
-        return '"%s" @%s' % (tag["text"], tag["from"]["username"])
+        username = self.get_user_from_source(tag["from"])
+        return '"%s" @%s' % (tag["text"], username)
+
+    def get_user_from_source(self, source):
+        username = source["username"] if "username" in source else source["first_name"]
+        return username
 
 class UserTagLimitException(Exception):
     pass
