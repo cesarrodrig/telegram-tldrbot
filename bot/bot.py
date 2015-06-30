@@ -22,7 +22,7 @@ Commands:
 /chatid - Returns the ID of the current chat.
 /tldr <chat_id> - Gets the tags from a chat. <chat_id> is optional and defaults to the current chat.
 /tag <text> - Adds a tag to the current chat.
-/deletetag <num> <chat_id> - Deletes tag from a chat. <chat_id is optional and defaults to the current chat.
+/deletetag <num> <chat_id> - Deletes tag from a chat. <num> should be a tag that you own. <chat_id> is optional and defaults to the current chat.
 """
 BOT_TAG = "@ehbot"
 
