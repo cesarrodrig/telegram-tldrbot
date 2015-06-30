@@ -209,7 +209,7 @@ class EhBot:
         return text[text.lower().find(BOT_TAG) + len(BOT_TAG):].strip()
 
     def tag_to_text(self, tag):
-        date = datetime.fromtimestamp(tag["date"]).strftime('%a %d %I:%M%p')
+        date = datetime.fromtimestamp(tag["date"], tz=LOCAL_TIMEZONE).strftime('%a %d %I:%M%p')
         username = self.get_user_from_source(tag["from"])
         return '"%s" @%s %s' % (tag["text"], username, date)
 
