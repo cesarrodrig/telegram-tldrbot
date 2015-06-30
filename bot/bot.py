@@ -6,7 +6,6 @@ import logger
 from config import *
 from requester import GetUpdatesRequest
 from requester import SendMessageRequest
-from tag import Tag
 
 
 HELP = """
