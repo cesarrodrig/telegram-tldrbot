@@ -22,7 +22,7 @@ Commands:
 /chatid - Returns the ID of the current chat.
 /tldr <chat_id> - Gets the tags from a chat. <chat_id> is optional and defaults to the current chat.
 /tag <text> - Adds a tag to the current chat.
-
+/deletetag <num> <chat_id> - Deletes tag from a chat. <chat_id is optional and defaults to the current chat.
 """
 BOT_TAG = "@ehbot"
 
@@ -93,6 +93,9 @@ class EhBot:
             elif message["text"].lower().find("/tag") == 0:
                 self.process_tag_command(message)
 
+            elif message["text"].lower().find("/deletetag") == 0:
+                self.process_delete_tag_command(message)
+
             elif BOT_TAG in message["text"].lower():
                 self.process_tag_mention(message)
 
@@ -141,13 +144,38 @@ class EhBot:
 
         self.send_tags(user_id, query_chat_id)
 
+    def process_delete_tag_command(self, message):
+        chat_id = message["chat"]["id"]
+        command = message["text"].split(" ")
+        tag_num = command[1]
+        if len(command) >= 3:
+            chat_id = command[2]
+
+        if not tag_num.isdigit():
+            self.send_warning_to_user(user_id, "Tag number is not valid")
+
+        tag_num = int(tag_num) - 1
+
+        user_id = message["from"]["id"]
+        if chat_id not in self.tags:
+            self.send_warning_to_user(user_id, "Chat doesn't have any tags")
+        elif tag_num > len(self.tags[chat_id]):
+            self.send_warning_to_user(user_id, "Tag number is not valid")
+        elif self.tags[chat_id][int(tag_num)]["from"]["id"] != message["from"]["id"]:
+            # owns the tag?
+            self.send_warning_to_user(user_id, "This tag is not yours")
+        else:
+            self.tags[chat_id].pop(tag_num)
+            self.send_warning_to_user(user_id, "Tag deleted")
+
     def send_tags(self, chat_id, query_chat_id):
         tags = []
         tags_text = ""
         if query_chat_id in self.tags:
             tags = self.tags[query_chat_id]
-            tags_text = "\n- ".join([self.tag_to_text(t) for t in tags])
-            tags_text = "Tags for chat %s:\n- %s" % (query_chat_id, tags_text)
+            tags = ["%s. %s" % (i+1, self.tag_to_text(t)) for i, t in enumerate(tags)]
+            tags_text = "\n".join(tags)
+            tags_text = "Tags for chat %s:\n%s" % (query_chat_id, tags_text)
         else:
             tags_text = "No Tags found for this chat"
 
