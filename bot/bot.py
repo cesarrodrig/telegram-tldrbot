@@ -210,9 +210,9 @@ class EhBot:
         return text[text.lower().find(BOT_TAG) + len(BOT_TAG):].strip()
 
     def tag_to_text(self, tag):
-        # date = datetime.datetime.fromtimestamp(tag["date"]).strftime('%Y-%m-%d %H:%M:%S')
+        date = datetime.fromtimestamp(tag["date"]).strftime('%a %d %I:%M%p')
         username = self.get_user_from_source(tag["from"])
-        return '"%s" @%s' % (tag["text"], username)
+        return '"%s" @%s %s' % (tag["text"], username, date)
 
     def get_user_from_source(self, source):
         username = source["username"] if "username" in source else source["first_name"]
