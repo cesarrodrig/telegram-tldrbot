@@ -148,7 +148,7 @@ class EhBot:
         chat_id = str(message["chat"]["id"])
         command = message["text"].split(" ")
         tag_num = command[1]
-        if len(command) >= 3 and command[2].isdigit():
+        if len(command) >= 3:
             chat_id = command[2]
 
         if not tag_num.isdigit():
@@ -159,8 +159,8 @@ class EhBot:
         user_id = message["from"]["id"]
         if chat_id not in self.tags:
             self.send_warning_to_user(user_id, "Chat doesn't have any tags")
-        elif tag_num >= len(self.tags[chat_id]):
-            self.send_warning_to_user(user_id, "Tag number is not valid")
+        elif tag_num < 0 or tag_num >= len(self.tags[chat_id]):
+            self.send_warning_to_user(user_id, "Tag number is out of range")
         elif self.tags[chat_id][tag_num]["from"]["id"] != message["from"]["id"]:
             # owns the tag?
             self.send_warning_to_user(user_id, "This tag is not yours")
