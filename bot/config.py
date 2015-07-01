@@ -1,7 +1,8 @@
+import os
 import logging
 import pytz
 
-BOT_URL = ""
+BOT_URL = os.getenv("BOT_URL", "")
 LAST_UPDATE_ID_FILE = "last_update"
 TAGS_FILE = "tags"
 POLL_PERIOD = 1
