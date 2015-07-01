@@ -54,6 +54,21 @@ class TlDrRequester(Requester):
     def __init__(self, request_path, query_params, request_body=None):
         super(TlDrRequester, self).__init__(BOT_URL, request_path, query_params, request_body)
 
+class SetWebhookRequest(TlDrRequester):
+    """
+    POST /setWebhook
+    """
+    def __init__(self, url=""):
+        request_path = '/setWebhook'
+        request_body = {}
+        query_params = {
+            "url": url
+        }
+        super(SetWebhookRequest, self).__init__(request_path, query_params, request_body)
+
+    def do(self):
+        return self._post()
+
 class GetUpdatesRequest(TlDrRequester):
     """
     GET /getUpdates
