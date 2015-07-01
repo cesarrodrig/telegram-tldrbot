@@ -64,8 +64,11 @@ class EhBot:
         if response.status_code != 200 or not content["ok"]:
             raise GetUpdatesException("Failed to get updates")
 
-        messages = self.get_messages(content)
-        last_update_id = self.get_last_update_id(content)
+        self.process_update(content)
+
+    def process_update(self, update):
+        messages = self.get_messages(update)
+        last_update_id = self.get_last_update_id(update)
         self.process_messages(messages)
 
         self.save_tags()
