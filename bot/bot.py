@@ -76,6 +76,12 @@ class EhBot:
         self._app.route("/", method="GET", callback=self.handle_health)
 
     def run_poll(self):
+        # disabling webhook
+        request = SetWebhookRequest(url="")
+        response, content = request.do()
+        if response.status_code != 200 or not content["ok"]:
+            raise InvalidWebhookException("Telegram response: %s" % content)
+
         while True:
             try:
                 self.poll()
