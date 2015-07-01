@@ -2,10 +2,13 @@ import json
 import time
 from datetime import datetime
 
+import bottle
+
 import logger
 from config import *
 from requester import GetUpdatesRequest
 from requester import SendMessageRequest
+from requester import SetWebhookRequest
 
 
 HELP = """
@@ -50,6 +53,29 @@ class EhBot:
         self.logger = logger.get_logger(__name__)
 
     def start(self):
+        # if ENVIRONMENT == "heroku":
+        if ENVIRONMENT:
+            self.run_webhook()
+        else:
+            self.run_poll()
+
+    def run_webhook(self):
+        if not WEBHOOK or not WEBHOOK_PORT:
+            raise InvalidWebhookException("Webhook is empty")
+
+        request = SetWebhookRequest(url=WEBHOOK)
+        response, content = request.do()
+        if response.status_code != 200 or not content["ok"]:
+            raise InvalidWebhookException("Telegram response: %s" % content)
+
+        self._app = bottle.Bottle()
+        self.map_routes()
+        self._app.run(host="localhost", port=WEBHOOK_PORT)
+
+    def map_routes(self):
+        self._app.route("/", method="POST", callback=self.handle_push_notification)
+
+    def run_poll(self):
         while True:
             try:
                 self.poll()
@@ -64,6 +90,10 @@ class EhBot:
         if response.status_code != 200 or not content["ok"]:
             raise GetUpdatesException("Failed to get updates")
 
+        self.process_update(content)
+
+    def handle_push_notification(self):
+        content = json.load(bottle.request.body)
         self.process_update(content)
 
     def get_messages(self, json):
@@ -256,6 +286,9 @@ class UserTagLimitException(Exception):
     pass
 
 class GetUpdatesException(Exception):
+    pass
+
+class InvalidWebhookException(Exception):
     pass
 
 bot = EhBot()
