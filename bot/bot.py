@@ -60,7 +60,7 @@ class EhBot:
             self.run_poll()
 
     def run_webhook(self):
-        if not WEBHOOK or not WEBHOOK_PORT:
+        if not WEBHOOK or not BOTTLE_PORT:
             raise InvalidWebhookException("Webhook is empty")
 
         request = SetWebhookRequest(url=WEBHOOK)
@@ -70,7 +70,7 @@ class EhBot:
 
         self._app = bottle.Bottle()
         self.map_routes()
-        self._app.run(host="localhost", port=WEBHOOK_PORT)
+        self._app.run(host=BOTTLE_HOST, port=BOTTLE_PORT)
 
     def map_routes(self):
         self._app.route("/", method="POST", callback=self.handle_push_notification)
