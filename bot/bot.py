@@ -1,5 +1,6 @@
 import json
 import time
+import sys
 from datetime import datetime
 
 import bottle
@@ -69,7 +70,7 @@ class EhBot:
 
         self._app = bottle.Bottle()
         self.map_routes()
-        self._app.run(host=BOTTLE_HOST, port=BOTTLE_PORT)
+        self._app.run(host=BOTTLE_HOST, port=sys.argv[1])
 
     def map_routes(self):
         self._app.route("/", method="POST", callback=self.handle_push_notification)
