@@ -74,6 +74,7 @@ class EhBot:
 
     def map_routes(self):
         self._app.route("/", method="POST", callback=self.handle_push_notification)
+        self._app.route("/", method="GET", callback=self.handle_health)
 
     def run_poll(self):
         while True:
@@ -91,6 +92,9 @@ class EhBot:
             raise GetUpdatesException("Failed to get updates")
 
         self.process_update(content)
+
+    def handle_health(self):
+        return "I'm fine"
 
     def handle_push_notification(self):
         content = json.load(bottle.request.body)
