@@ -145,10 +145,10 @@ class EhBot:
         self.send_tags(user_id, query_chat_id)
 
     def process_delete_tag_command(self, message):
-        chat_id = message["chat"]["id"]
+        chat_id = str(message["chat"]["id"])
         command = message["text"].split(" ")
         tag_num = command[1]
-        if len(command) >= 3:
+        if len(command) >= 3 and command[2].isdigit():
             chat_id = command[2]
 
         if not tag_num.isdigit():
