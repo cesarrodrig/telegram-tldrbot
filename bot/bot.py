@@ -66,6 +66,12 @@ class EhBot:
 
         self.process_update(content)
 
+    def get_messages(self, json):
+        return [m["message"] for m in json["result"] if "message" in m]
+
+    def get_last_update_id(self, json):
+        return json["result"][-1]["update_id"] if json["result"] else None
+
     def process_update(self, update):
         messages = self.get_messages(update)
         last_update_id = self.get_last_update_id(update)
@@ -73,12 +79,6 @@ class EhBot:
 
         self.save_tags()
         self.save_last_update_id(last_update_id)
-
-    def get_messages(self, json):
-        return [m["message"] for m in json["result"] if "message" in m]
-
-    def get_last_update_id(self, json):
-        return json["result"][-1]["update_id"] if json["result"] else None
 
     def process_messages(self, messages):
 
