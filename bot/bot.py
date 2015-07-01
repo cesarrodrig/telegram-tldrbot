@@ -51,7 +51,11 @@ class EhBot:
 
     def start(self):
         while True:
-            self.poll()
+            try:
+                self.poll()
+            except Exception as e:
+                self.logger.error(e)
+
             time.sleep(POLL_PERIOD)
 
     def poll(self):
