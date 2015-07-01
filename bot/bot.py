@@ -53,8 +53,7 @@ class EhBot:
         self.logger = logger.get_logger(__name__)
 
     def start(self):
-        # if ENVIRONMENT == "heroku":
-        if ENVIRONMENT:
+        if ENVIRONMENT == "heroku":
             self.run_webhook()
         else:
             self.run_poll()
