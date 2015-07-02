@@ -43,7 +43,7 @@ class EhBot:
 
         tags = {}
         try:
-            f = open(TAGS_FILE)
+            f = open(GROUPS_DB_NAME)
             tags = json.loads(f.read())
             f.close()
         except:
@@ -256,7 +256,7 @@ class EhBot:
         f.close()
 
     def save_tags(self):
-        f = open(TAGS_FILE, "w")
+        f = open(GROUPS_DB_NAME, "w")
         f.write(json.dumps(self.tags))
         f.close()
 
