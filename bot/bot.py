@@ -1,6 +1,7 @@
 import json
 import time
 import sys
+import traceback
 from datetime import datetime
 
 import bottle
@@ -91,6 +92,7 @@ class EhBot:
             try:
                 self.poll()
             except Exception as e:
+                self.logger.error(str(traceback.format_exc()))
                 self.logger.error(e)
 
             time.sleep(POLL_PERIOD)
