@@ -110,6 +110,7 @@ class EhBot:
         self.process_update(content)
 
     def get_messages(self, json):
+        if "result" not in json: return
         return [message_from_json(m["message"]) for m in json["result"] if "message" in m]
 
     def get_last_update_id(self, json):
