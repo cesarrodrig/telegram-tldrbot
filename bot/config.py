@@ -13,3 +13,4 @@ POLL_PERIOD = 1
 MAX_TAGS = 5
 LOGGING_LEVEL = logging.DEBUG
 LOCAL_TIMEZONE = pytz.timezone('America/Mexico_City')
+PENDING_MIGRATION = os.getenv("PENDING_MIGRATION", False)
