@@ -108,6 +108,7 @@ class EhBot:
     def handle_push_notification(self):
         try:
             content = json.load(bottle.request.body)
+            self.logger.info("Loaded from webhook: %s" % content)
             self.process_update(content)
         except Exception as e:
             self.logger.error(str(traceback.format_exc()))
