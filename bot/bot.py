@@ -106,8 +106,12 @@ class EhBot:
         return "I'm fine"
 
     def handle_push_notification(self):
-        content = json.load(bottle.request.body)
-        self.process_update(content)
+        try:
+            content = json.load(bottle.request.body)
+            self.process_update(content)
+        except Exception as e:
+            self.logger.error(str(traceback.format_exc()))
+            self.logger.error(e)
 
     def get_messages(self, json):
         if "result" not in json: return
