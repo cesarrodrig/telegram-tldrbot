@@ -100,7 +100,7 @@ class EhBot:
         if response.status_code != 200 or not content["ok"]:
             raise GetUpdatesException("Failed to get updates")
 
-        self.process_update(content)
+        self.process_update(content["result"])
 
     def handle_health(self):
         return "I'm fine"
@@ -113,15 +113,14 @@ class EhBot:
             self.logger.error(str(traceback.format_exc()))
             self.logger.error(e)
 
-    def get_messages(self, json):
-        if "result" not in json: return
-        return [message_from_json(m["message"]) for m in json["result"] if "message" in m]
+    def get_messages(self, results):
+        return [message_from_json(m["message"]) for m in results if "message" in m]
 
-    def get_last_update_id(self, json):
-        return json["result"][-1]["update_id"] if json["result"] else None
+    def get_last_update_id(self, results):
+        return results[-1]["update_id"] if json["result"] else None
 
-    def process_update(self, update):
-        messages = self.get_messages(update)
+    def process_update(self, results):
+        messages = self.get_messages(results)
         last_update_id = self.get_last_update_id(update)
         self.process_messages(messages)
 
