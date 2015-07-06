@@ -8,6 +8,11 @@ import bottle
 
 import logger
 import migration
+from chat import Chat
+from message import Message
+from message import message_from_json
+from tag import Tag
+from mapper import TextFileMapper
 from config import *
 from requester import GetUpdatesRequest
 from requester import SendMessageRequest
@@ -46,15 +51,7 @@ class EhBot:
         except:
             pass
 
-        tags = {}
-        try:
-            f = open(GROUPS_DB_NAME)
-            tags = json.loads(f.read())
-            f.close()
-        except:
-            pass
-
-        self.tags = tags
+        self.mapper = TextFileMapper(GROUPS_DB_NAME)
         self.last_update_id = int(update_id)
         self.logger = logger.get_logger(__name__)
 
@@ -113,7 +110,7 @@ class EhBot:
         self.process_update(content)
 
     def get_messages(self, json):
-        return [m["message"] for m in json["result"] if "message" in m]
+        return [message_from_json(m["message"]) for m in json["result"] if "message" in m]
 
     def get_last_update_id(self, json):
         return json["result"][-1]["update_id"] if json["result"] else None
@@ -123,33 +120,33 @@ class EhBot:
         last_update_id = self.get_last_update_id(update)
         self.process_messages(messages)
 
-        self.save_tags()
         self.save_last_update_id(last_update_id)
 
     def process_messages(self, messages):
 
         for message in messages:
-            chat_id = str(message["chat"]["id"])
-            user_id = str(message["from"]["id"])
-            if "text" not in message:
+            chat_id = message.chat_id
+            user_id = message.user.id
+            text = message.text
+            if not text:
                 continue
 
-            if message["text"] == "/help":
+            if text == "/help":
                 self.process_help(chat_id)
 
-            elif message["text"].lower().find("/tldr") == 0:
-                self.process_tldr_query(chat_id, user_id, message["text"])
+            elif text.lower().find("/tldr") == 0:
+                self.process_tldr_query(chat_id, user_id, text)
 
-            elif message["text"].lower().find("/chatid") == 0:
+            elif text.lower().find("/chatid") == 0:
                 self.process_chat_id_query(chat_id)
 
-            elif message["text"].lower().find("/tag") == 0:
+            elif text.lower().find("/tag ") == 0:
                 self.process_tag_command(message)
 
-            elif message["text"].lower().find("/deletetag") == 0:
+            elif text.lower().find("/deletetag ") == 0:
                 self.process_delete_tag_command(message)
 
-            elif BOT_TAG in message["text"].lower():
+            elif BOT_TAG in text.lower():
                 self.process_tag_mention(message)
 
     def process_help(self, chat_id):
@@ -159,24 +156,24 @@ class EhBot:
             raise "Failed to send /help"
 
     def process_tag_command(self, message):
-        chat_id = str(message["chat"]["id"])
+        chat_id = message.chat_id
         try:
             tag = self.get_tag_from_message(message, lambda text: text.split("/tag")[-1].strip())
             self.add_tag(chat_id, tag)
         except UserTagLimitException as e:
-            self.send_warning_to_user(message["from"]["id"], "Stop spamming")
+            self.send_warning_to_user(message.user.id, "Stop spamming")
             self.logger.warn(e.message)
 
     def process_tag_mention(self, message):
         """
         Takes a message that mentions EhBot and stores it as a tag
         """
-        chat_id = str(message["chat"]["id"])
+        chat_id = message.chat_id
         try:
             tag = self.get_tag_from_message(message, self.get_tag_text_from_mention)
             self.add_tag(chat_id, tag)
         except UserTagLimitException as e:
-            self.send_warning_to_user(message["from"]["id"], "Stop spamming")
+            self.send_warning_to_user(message.user.id, "Stop spamming")
             self.logger.warn(e.message)
 
     def process_chat_id_query(self, chat_id):
@@ -198,8 +195,8 @@ class EhBot:
         self.send_tags(user_id, query_chat_id)
 
     def process_delete_tag_command(self, message):
-        chat_id = str(message["chat"]["id"])
-        command = message["text"].split(" ")
+        chat_id = message.chat_id
+        command = message.text.split(" ")
         tag_num = command[1]
         if len(command) >= 3:
             chat_id = command[2]
@@ -209,24 +206,24 @@ class EhBot:
 
         tag_num = int(tag_num) - 1
 
-        user_id = message["from"]["id"]
-        if chat_id not in self.tags:
+        user_id = message.user.id
+        chat = self.mapper.get_chat_by_id(chat_id)
+        if not chat:
             self.send_warning_to_user(user_id, "Chat doesn't have any tags")
-        elif tag_num < 0 or tag_num >= len(self.tags[chat_id]):
+        elif tag_num < 0 or tag_num >= len(chat.tags):
             self.send_warning_to_user(user_id, "Tag number is out of range")
-        elif self.tags[chat_id][tag_num]["from"]["id"] != message["from"]["id"]:
+        elif chat.tags[tag_num].user.id != user_id:
             # owns the tag?
             self.send_warning_to_user(user_id, "This tag is not yours")
         else:
-            self.tags[chat_id].pop(tag_num)
+            chat.tags.pop(tag_num)
             self.send_warning_to_user(user_id, "Tag deleted")
 
     def send_tags(self, chat_id, query_chat_id):
-        tags = []
         tags_text = ""
-        if query_chat_id in self.tags:
-            tags = self.tags[query_chat_id]
-            tags = ["%s. %s" % (i+1, self.tag_to_text(t)) for i, t in enumerate(tags)]
+        chat = self.mapper.get_chat_by_id(query_chat_id)
+        if chat:
+            tags = ["%s. %s" % (i+1, t.pretty_print()) for i, t in enumerate(chat.tags)]
             tags_text = "\n".join(tags)
             tags_text = "Tags for chat %s:\n%s" % (query_chat_id, tags_text)
         else:
@@ -244,12 +241,14 @@ class EhBot:
             raise "Failed to send warning to user"
 
     def add_tag(self, chat_id, tag):
-        if chat_id not in self.tags:
-            self.tags[chat_id] = []
-        elif len(self.tags[chat_id]) >= 5:
-            self.tags[chat_id].pop(0)
+        chat = self.mapper.get_chat_by_id(chat_id)
+        if not chat:
+            chat = Chat(chat_id, tags=[tag])
+        elif len(chat.tags) >= 5:
+            chat.tags.pop(0)
 
-        self.tags[chat_id].append(tag)
+        chat.tags.append(tag)
+        self.mapper.save_chat(chat)
 
     def save_last_update_id(self, last_update_id):
         # if we found results, increment the last_update_id, else it stays the same
@@ -261,42 +260,24 @@ class EhBot:
         f.write(str(self.last_update_id))
         f.close()
 
-    def save_tags(self):
-        f = open(GROUPS_DB_NAME, "w")
-        f.write(json.dumps(self.tags))
-        f.close()
-
     def get_tag_from_message(self, message, tag_func):
-        date = datetime.fromtimestamp(message["date"])
-        chat_id = str(message["chat"]["id"])
-        user_id = message["from"]["id"]
+        date = datetime.fromtimestamp(message.date)
+        chat_id = message.chat_id
+        user = message.user
 
-        if chat_id in self.tags:
-            for tag in self.tags[chat_id]:
-                d = datetime.fromtimestamp(tag["date"])
+        chat = self.mapper.get_chat_by_id(chat_id)
+        if chat:
+            for t in chat.tags:
+                d = datetime.fromtimestamp(t.date)
 
-                if tag["from"]["id"] == user_id and (date - d).days == 0 and (date - d).seconds <= 5 * 60:
-                    username = self.get_user_from_source(tag["from"])
+                if t.user.id == user.id and (message.date - t.date) <= 5 * 60:
+                    username = t.user.pretty_print()
                     raise UserTagLimitException("User '%s' is submitting too rapidly" % username)
-
-        tag = {
-            "from" : message["from"],
-            "date" : message["date"],
-            "text" : tag_func(message["text"])
-        }
-        return tag
+        text = tag_func(message.text)
+        return Tag(text=text, user=user, date=message.date)
 
     def get_tag_text_from_mention(self, text):
         return text[text.lower().find(BOT_TAG) + len(BOT_TAG):].strip()
-
-    def tag_to_text(self, tag):
-        date = datetime.fromtimestamp(tag["date"], tz=LOCAL_TIMEZONE).strftime('%a %d %I:%M%p')
-        username = self.get_user_from_source(tag["from"])
-        return '"%s" @%s %s' % (tag["text"], username, date)
-
-    def get_user_from_source(self, source):
-        username = source["username"] if "username" in source else source["first_name"]
-        return username
 
 class UserTagLimitException(Exception):
     pass
