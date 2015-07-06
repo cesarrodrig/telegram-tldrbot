@@ -231,12 +231,12 @@ class EhBot:
     def send_tags(self, chat_id, query_chat_id):
         tags_text = ""
         chat = self.mapper.get_chat_by_id(query_chat_id)
-        if chat:
+        if not chat or len(chat.tags) == 0:
+            tags_text = "No Tags found for this chat"
+        else:
             tags = ["%s. %s" % (i+1, t.pretty_print()) for i, t in enumerate(chat.tags)]
             tags_text = "\n".join(tags)
             tags_text = "Tags for chat %s:\n%s" % (query_chat_id, tags_text)
-        else:
-            tags_text = "No Tags found for this chat"
 
         request = SendMessageRequest(chat_id, tags_text)
         response, content = request.do()
