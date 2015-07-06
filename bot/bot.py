@@ -118,7 +118,7 @@ class EhBot:
         return [message_from_json(m["message"]) for m in results if "message" in m]
 
     def get_last_update_id(self, results):
-        return results[-1]["update_id"] if json["result"] else None
+        return results[-1]["update_id"] if results else None
 
     def process_updates(self, updates):
         messages = self.get_messages(updates)
