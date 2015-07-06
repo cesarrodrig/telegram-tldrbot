@@ -6,6 +6,7 @@ from datetime import datetime
 import bottle
 
 import logger
+import migration
 from config import *
 from requester import GetUpdatesRequest
 from requester import SendMessageRequest
@@ -33,6 +34,9 @@ BOT_TAG = "@ehbot"
 class EhBot:
 
     def __init__(self):
+        if PENDING_MIGRATION:
+            migration.do()
+
         update_id = "0"
         try:
             f = open(LAST_UPDATE_ID_FILE)
