@@ -41,6 +41,6 @@ class TextFileMapper(Mapper):
 
     def save_user(self, user):
         self.users[user.id] = user
-        f = open(USERS_COLLECTION_NAME)
+        f = open(USERS_COLLECTION_NAME, "w")
         f.write(jsonpickle.encode(self.users))
         f.close()
