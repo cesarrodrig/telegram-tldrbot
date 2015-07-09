@@ -3,6 +3,7 @@ import logging
 import pytz
 
 BOT_URL = os.getenv("BOT_URL", "")
+BOT_CHAT_ID = "58699815"
 ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
 WEBHOOK = os.getenv("WEBHOOK", "")
 BOTTLE_PORT = os.getenv("BOTTLE_PORT", "8080")
