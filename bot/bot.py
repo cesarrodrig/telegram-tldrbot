@@ -135,7 +135,7 @@ class EhBot:
 
         for message in messages:
             chat_id = message.chat_id
-            user_id = message.user.id
+            user = message.user
             text = message.text
             if not text:
                 continue
@@ -144,7 +144,7 @@ class EhBot:
                 self.process_help(chat_id)
 
             elif text.lower().find("/tldr") == 0:
-                self.process_tldr_query(chat_id, user_id, text)
+                self.process_tldr_query(message)
 
             elif text.lower().find("/chatid") == 0:
                 self.process_chat_id_query(chat_id)
@@ -192,16 +192,21 @@ class EhBot:
         if response.status_code != 200 or not content["ok"]:
             raise "Failed to send /help"
 
-    def process_tldr_query(self, chat_id, user_id, text):
-        query_chat = text.split("/tldr")[-1].strip()
+    def process_tldr_query(self, message):
+        user = message.user
+        query_chat = message.text.split("/tldr")[-1].strip()
         query_chat_id = None
-        if not query_chat:
-            query_chat_id = chat_id
-        else:
-            # query_chat_id = self.get_chat_id_from_chat_name(query_chat)
-            query_chat_id = query_chat
 
-        self.send_tags(user_id, query_chat_id)
+        if query_chat: # chat id specified
+            query_chat_id = query_chat
+        else if user.last_tldr: # no query chat, try to provide last tldr
+            query_chat_id = user.last_tldr
+        else: # no query chat or tldr, provide current chat tldr
+            query_chat_id = message.chat_id
+
+        self.send_tags(user.id, query_chat_id)
+        user.last_tldr = query_chat_id
+        self.mapper.save_user(user)
 
     def process_delete_tag_command(self, message):
         chat_id = message.chat_id

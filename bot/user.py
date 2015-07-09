@@ -13,6 +13,7 @@ class User(object):
         self.first_name = first_name
         self.last_name = last_name
         self.username = username
+        self.last_tldr = None
 
     def pretty_print(self):
         username = self.username if self.username else self.first_name
