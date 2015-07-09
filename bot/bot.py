@@ -135,7 +135,6 @@ class EhBot:
 
         for message in messages:
             chat_id = message.chat_id
-            user = message.user
             text = message.text
             if not text:
                 continue
@@ -193,19 +192,24 @@ class EhBot:
             raise "Failed to send /help"
 
     def process_tldr_query(self, message):
-        user = message.user
+        # try to get it from DB
+        user = self.mapper.get_user_by_id(message.user.id)
+        if not user: user = message.user
+
         query_chat = message.text.split("/tldr")[-1].strip()
         query_chat_id = None
 
         if query_chat: # chat id specified
             query_chat_id = query_chat
-        else if user.last_tldr: # no query chat, try to provide last tldr
+            user.last_tldr = query_chat_id
+        elif message.chat_id == BOT_CHAT_ID and user.last_tldr:
+            # sent directly to ehbot, try to provide last tldr
             query_chat_id = user.last_tldr
         else: # no query chat or tldr, provide current chat tldr
             query_chat_id = message.chat_id
+            user.last_tldr = query_chat_id
 
         self.send_tags(user.id, query_chat_id)
-        user.last_tldr = query_chat_id
         self.mapper.save_user(user)
 
     def process_delete_tag_command(self, message):
