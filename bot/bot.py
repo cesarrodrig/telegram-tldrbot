@@ -261,7 +261,7 @@ class EhBot:
     def add_tag(self, chat_id, tag):
         chat = self.mapper.get_chat_by_id(chat_id)
         if not chat:
-            chat = Chat(chat_id, tags=[tag])
+            chat = Chat(chat_id)
         elif len(chat.tags) >= 5:
             chat.tags.pop(0)
 
