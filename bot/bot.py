@@ -235,6 +235,7 @@ class EhBot:
             self.send_warning_to_user(user_id, "This tag is not yours")
         else:
             tag = chat.tags.pop(tag_num)
+            self.mapper.save_chat(chat)
             self.send_warning_to_user(user_id, "Tag '%s' deleted" % tag.text)
 
     def send_tags(self, chat_id, query_chat_id):
