@@ -9,7 +9,7 @@ def user_from_json(user_json):
 class User(object):
 
     def __init__(self, id, first_name="", last_name="", username=""):
-        self.id = id
+        self.id = str(id)
         self.first_name = first_name
         self.last_name = last_name
         self.username = username

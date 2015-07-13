@@ -2,3 +2,4 @@ requests==2.2.1
 pytz==2015.4
 jsonpickle==0.9.2
 bottle==0.12.8
+psycopg2==2.6.1

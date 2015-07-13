@@ -12,7 +12,7 @@ from chat import Chat
 from message import Message
 from message import message_from_json
 from tag import Tag
-from mapper import TextFileMapper
+from mapper import PostgreSQLMapper
 from config import *
 from requester import GetUpdatesRequest
 from requester import SendMessageRequest
@@ -51,7 +51,7 @@ class EhBot:
         except:
             pass
 
-        self.mapper = TextFileMapper(GROUPS_DB_NAME)
+        self.mapper = PostgreSQLMapper(CHATS_COLLECTION_NAME)
         self.last_update_id = int(update_id)
         self.logger = logger.get_logger(__name__)
 
