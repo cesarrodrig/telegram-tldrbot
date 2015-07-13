@@ -8,7 +8,7 @@ from config import *
 
 
 def do():
-    f = open(GROUPS_DB_NAME)
+    f = open(CHATS_COLLECTION_NAME)
     tags = json.loads(f.read())
     f.close()
 
@@ -29,7 +29,7 @@ def do():
 
     encoded = jsonpickle.encode(chats_by_id)
 
-    f = open(GROUPS_DB_NAME, "w")
+    f = open(CHATS_COLLECTION_NAME, "w")
     f.write(encoded)
     f.close()
 
