@@ -66,6 +66,7 @@ def db_operation(func):
         finally:
             # don't close a connection you didn't open
             if self.connection and opened_conn:
+                self.connection.commit()
                 self.connection.close()
                 self.connection = None
 
@@ -89,18 +90,19 @@ class PostgreSQLMapper(Mapper):
             host=self.url.hostname,
             port=self.url.port
         )
-        conn.set_session(autocommit=True)
         self.connection = conn
-
         return conn
 
-    @db_operation
     def provision_db(self):
         try:
-            self.cursor.execute(CREATE_TABLE, CHATS_COLLECTION_NAME)
-            self.cursor.execute(CREATE_TABLE, USERS_COLLECTION_NAME)
+            self.create_table(CHATS_COLLECTION_NAME)
+            self.create_table(USERS_COLLECTION_NAME)
         except:
             pass # ignore errors
+
+        # ensure that we have the tables
+        self.get_chat_by_id("dummy")
+        self.get_user_by_id("dummy")
 
     def get_chat_by_id(self, id):
         res = self._select_by_id(CHATS_COLLECTION_NAME, {'id': id })
@@ -145,3 +147,9 @@ class PostgreSQLMapper(Mapper):
     def _update_by_id(self, table, values):
         statement = UPDATE_BY_ID.format(table)
         self.cursor.execute(statement, values)
+
+    @db_operation
+    def create_table(self, table):
+        statement = CREATE_TABLE % table
+        self.cursor.execute(statement)
+        self.connection.commit()
