@@ -127,7 +127,7 @@ class PostgreSQLMapper(Mapper):
 
     def save_user(self, user):
         blob = jsonpickle.encode(user)
-        if self.get_chat_by_id(user.id): # update user if it already exists
+        if self.get_user_by_id(user.id): # update user if it already exists
             self._update_by_id(USERS_COLLECTION_NAME, {'id': user.id, 'value': blob})
         else:
             self._insert(USERS_COLLECTION_NAME, {'id': user.id, 'value': blob})
